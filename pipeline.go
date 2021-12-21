@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"cloud.google.com/go/civil"
 	"github.com/heimdalr/dag"
 )
 
@@ -121,6 +120,7 @@ func (p *Pipeline) processCompletionQueue(
 	wg.Done()
 }
 
+// CountUncompletedTasks returns the number of uncompleted tasks.
 func (p *Pipeline) CountUncompletedTasks() int64 {
 	c := int64(0)
 	for _, t := range p.tasks {
@@ -131,52 +131,7 @@ func (p *Pipeline) CountUncompletedTasks() int64 {
 	return c
 }
 
-type Schedule string
-
-const (
-	None   Schedule = "None"
-	Once   Schedule = "Once"
-	Daily  Schedule = "Daily"
-	Hourly Schedule = "Hourly"
-)
-
-type KeyTransformer interface {
-	Transform(id string) string
-}
-
-type DailyKeyTransformer struct {
-	DS civil.Date
-	KeyTransformer
-}
-
-/*
-func (t *DailyKeyTransformer) Transform(id string) string {
-	return fmt.Sprintf("%s/%s", t.DS.String(), id)
-}
-
-func (p *Pipeline) Book(ctx context.Context) error {
-	for _, task := range p.tasks {
-		key := p.KeyTransformer.Transform(task.ID())
-
-		t := &Task{}
-		found, err := p.Store.Get(key, t)
-		if err != nil {
-			return err
-		}
-
-		if found {
-			continue
-		}
-
-		if err := p.Store.Set(key, task); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-*/
-
+// Run executes its pipeline.
 func (p *Pipeline) Run(ctx context.Context) error {
 	runq := make(chan string)
 	compq := make(chan string)

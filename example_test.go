@@ -9,7 +9,7 @@ import (
 	gokvfile "github.com/philippgille/gokv/file"
 )
 
-func ExampleTest1() {
+func ExamplePipeline() {
 	store, _ := gokvfile.NewStore(gokvfile.DefaultOptions)
 	defer store.Close()
 
@@ -45,5 +45,6 @@ func ExampleTest1() {
 	p.Depend(t2, t3)
 	p.Depend(t2, t4)
 
-	p.Run(context.Background())
+	err := p.Run(context.Background())
+	_ = err
 }

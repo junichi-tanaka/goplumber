@@ -69,20 +69,22 @@ func (p *Pipeline) processRunQueue(
 		if !p.isReady(id) {
 			continue
 		}
+
 		// Start a task worker as a goroutine.
+		wg.Add(1)
 		go func(ctx context.Context, id string) {
-			wg.Add(1)
 			t := p.tasks[id]
 			if !t.IsCompleted() {
-				t.transition(ctx, Running)
+				_ = t.transition(ctx, Running)
 				var params interface{}
 				if _, err := t.Do(ctx, params); err != nil {
 					// TODO: how to handle the error
 					// should i hundle the multiple errors?
 					panic(err)
 				}
-				t.transition(ctx, Completed)
+				_ = t.transition(ctx, Completed)
 			}
+
 			// Send a message of completed task.
 			compq <- id
 			wg.Done()
@@ -107,7 +109,7 @@ func (p *Pipeline) processCompletionQueue(
 
 			// Invoke subsequent tasks.
 			r, _ := p.dag.GetChildren(id)
-			for cid, _ := range r {
+			for cid := range r {
 				runq <- cid
 			}
 		}
@@ -137,7 +139,7 @@ func (p *Pipeline) Run(ctx context.Context) error {
 	compq := make(chan string)
 	wg := &sync.WaitGroup{}
 
-	for id, _ := range p.dag.GetRoots() {
+	for id := range p.dag.GetRoots() {
 		runq <- id
 	}
 
